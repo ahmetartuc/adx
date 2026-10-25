@@ -1,0 +1,18 @@
+{
+  "meta": { "type": "certtemplates", "version": 5, "count": 1 },
+  "data": [
+    {
+      "ObjectIdentifier": "11111111-2222-3333-4444-555555555555",
+      "Properties": {
+        "name": "USERTEMPLATE@CORP.LOCAL",
+        "domain": "CORP.LOCAL",
+        "enrolleesuppliessubject": true,
+        "requiresmanagerapproval": false,
+        "authenticationenabled": true,
+        "authorizedsignatures": 0,
+        "certificateauthorities": "CORP-CA"
+      },
+      "Aces": []
+    }
+  ]
+}

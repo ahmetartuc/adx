@@ -1,0 +1,10 @@
+{
+  "meta": { "type": "users", "version": 5, "count": 5 },
+  "data": [
+    { "ObjectIdentifier": "S-1-5-21-1111-1001", "Properties": { "name": "JDOE@CORP.LOCAL", "domain": "CORP.LOCAL", "displayname": "John Doe", "enabled": true, "hasspn": false }, "Aces": [] },
+    { "ObjectIdentifier": "S-1-5-21-1111-1002", "Properties": { "name": "ASMITH@CORP.LOCAL", "domain": "CORP.LOCAL", "displayname": "Alice Smith", "enabled": true, "dontreqpreauth": true }, "Aces": [] },
+    { "ObjectIdentifier": "S-1-5-21-1111-1003", "Properties": { "name": "SVC_SQL@CORP.LOCAL", "domain": "CORP.LOCAL", "enabled": true, "hasspn": true, "serviceprincipalnames": ["MSSQLSvc/sql01.corp.local:1433"], "pwdlastset": 1552300000, "rc4": true }, "Aces": [] },
+    { "ObjectIdentifier": "S-1-5-21-1111-1004", "Properties": { "name": "SVC_BACKUP@CORP.LOCAL", "domain": "CORP.LOCAL", "enabled": true, "description": "Backup service account" }, "Aces": [] },
+    { "ObjectIdentifier": "S-1-5-21-1111-1005", "Properties": { "name": "DA_ADMIN@CORP.LOCAL", "domain": "CORP.LOCAL", "enabled": true, "admincount": true }, "Aces": [] }
+  ]
+}

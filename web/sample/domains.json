@@ -1,0 +1,15 @@
+{
+  "meta": { "type": "domains", "version": 5, "count": 1 },
+  "data": [
+    {
+      "ObjectIdentifier": "S-1-5-21-1111",
+      "Properties": { "name": "CORP.LOCAL", "domain": "CORP.LOCAL", "functionallevel": "2016", "machineaccountquota": 10 },
+      "Aces": [
+        { "PrincipalSID": "S-1-5-21-1111-1004", "PrincipalType": "User", "RightName": "GetChanges", "IsInherited": false },
+        { "PrincipalSID": "S-1-5-21-1111-1004", "PrincipalType": "User", "RightName": "GetChangesAll", "IsInherited": false }
+      ],
+      "Trusts": [],
+      "ChildObjects": []
+    }
+  ]
+}

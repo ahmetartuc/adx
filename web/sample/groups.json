@@ -1,0 +1,34 @@
+{
+  "meta": { "type": "groups", "version": 5, "count": 4 },
+  "data": [
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-2001",
+      "Properties": { "name": "HELPDESK@CORP.LOCAL", "domain": "CORP.LOCAL" },
+      "Members": [ { "ObjectIdentifier": "S-1-5-21-1111-1001", "ObjectType": "User" } ],
+      "Aces": []
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-512",
+      "Properties": { "name": "DOMAIN ADMINS@CORP.LOCAL", "domain": "CORP.LOCAL", "highvalue": true, "admincount": true },
+      "Members": [ { "ObjectIdentifier": "S-1-5-21-1111-1005", "ObjectType": "User" } ],
+      "Aces": []
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-513",
+      "Properties": { "name": "DOMAIN USERS@CORP.LOCAL", "domain": "CORP.LOCAL" },
+      "Members": [
+        { "ObjectIdentifier": "S-1-5-21-1111-1001", "ObjectType": "User" },
+        { "ObjectIdentifier": "S-1-5-21-1111-1002", "ObjectType": "User" },
+        { "ObjectIdentifier": "S-1-5-21-1111-1003", "ObjectType": "User" },
+        { "ObjectIdentifier": "S-1-5-21-1111-1004", "ObjectType": "User" }
+      ],
+      "Aces": []
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-516",
+      "Properties": { "name": "DOMAIN CONTROLLERS@CORP.LOCAL", "domain": "CORP.LOCAL", "highvalue": true },
+      "Members": [ { "ObjectIdentifier": "S-1-5-21-1111-3003", "ObjectType": "Computer" } ],
+      "Aces": []
+    }
+  ]
+}

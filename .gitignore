@@ -1,0 +1,5 @@
+/adx
+/dist/
+*.zip
+*.7z
+.DS_Store

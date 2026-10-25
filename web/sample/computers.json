@@ -1,0 +1,28 @@
+{
+  "meta": { "type": "computers", "version": 5, "count": 3 },
+  "data": [
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-3001",
+      "Properties": { "name": "WEB02.CORP.LOCAL", "domain": "CORP.LOCAL", "operatingsystem": "Windows Server 2019", "enabled": true },
+      "AllowedToAct": [ { "ObjectIdentifier": "S-1-5-21-1111-2001", "ObjectType": "Group" } ],
+      "Sessions": { "Collected": true, "Results": [ { "UserSID": "S-1-5-21-1111-1005", "ComputerSID": "S-1-5-21-1111-3001" } ] },
+      "LocalAdmins": { "Collected": true, "Results": [] },
+      "Aces": []
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-3002",
+      "Properties": { "name": "SQL01.CORP.LOCAL", "domain": "CORP.LOCAL", "operatingsystem": "Windows Server 2016", "enabled": true, "unconstraineddelegation": true },
+      "LocalAdmins": { "Collected": true, "Results": [ { "ObjectIdentifier": "S-1-5-21-1111-1003", "ObjectType": "User" } ] },
+      "Sessions": { "Collected": true, "Results": [] },
+      "Aces": []
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-1111-3003",
+      "Properties": { "name": "DC01.CORP.LOCAL", "domain": "CORP.LOCAL", "operatingsystem": "Windows Server 2022", "enabled": true },
+      "IsDC": true,
+      "LocalAdmins": { "Collected": true, "Results": [] },
+      "Sessions": { "Collected": true, "Results": [] },
+      "Aces": []
+    }
+  ]
+}
