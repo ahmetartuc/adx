@@ -29,6 +29,7 @@ type Config struct {
 	Ccache   string // Kerberos ccache path (pass-the-ticket / local)
 	Kerberos bool   // Kerberos auth using the password
 	Krb5Conf string // path to krb5.conf (generated if empty)
+	NoRPC    bool   // skip the SMB/RPC session + local-admin pass
 	LDAPS    bool
 	Port     int
 	Insecure bool // skip TLS certificate verification
@@ -44,6 +45,12 @@ type entry struct {
 	attrs map[string][]string
 	sd    []byte // raw nTSecurityDescriptor
 	rbcd  []byte // raw msDS-AllowedToActOnBehalfOfOtherIdentity
+	// RPC (SMB) results, computers only:
+	admins    []string // AdminTo    (local Administrators)
+	rdp       []string // CanRDP     (Remote Desktop Users)
+	dcom      []string // ExecuteDCOM
+	psremote  []string // CanPSRemote (Remote Management Users)
+	sessions  []string // HasSession  (user SIDs with a session here)
 }
 
 func (e *entry) first(a string) string {
@@ -119,6 +126,25 @@ func Run(cfg Config) (string, error) {
 		}
 		if e.kind == "certtemplate" {
 			c.tmplByCN[strings.ToUpper(e.first("cn"))] = e.guid
+		}
+	}
+
+	// SMB/RPC pass: local admins, RDP/PSRemote/DCOM, sessions (best-effort).
+	if !cfg.NoRPC && rpcReady(cfg) {
+		var computers []*entry
+		samToSID := map[string]string{}
+		for _, e := range entries {
+			if e.kind == "computer" {
+				computers = append(computers, e)
+			}
+			if sam := e.first("sAMAccountName"); sam != "" && e.sid != "" {
+				samToSID[strings.ToUpper(strings.TrimSuffix(sam, "$"))] = e.sid
+			}
+		}
+		if len(computers) > 0 {
+			fmt.Printf("  SMB/RPC over %d computer(s)…\n", len(computers))
+			reached, denied, failed := collectRPC(cfg, computers, samToSID)
+			fmt.Printf("  RPC: %d reached, %d access-denied, %d unreachable\n", reached, denied, failed)
 		}
 	}
 

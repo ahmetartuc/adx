@@ -27,10 +27,31 @@ type outObj struct {
 	Members           []ref            `json:"Members,omitempty"`
 	PrimaryGroupSID      string `json:"PrimaryGroupSID,omitempty"`
 	AllowedToDelegate    []ref  `json:"AllowedToDelegate,omitempty"`
-	AllowedToAct         []ref  `json:"AllowedToAct,omitempty"`
-	ChildObjects         []ref  `json:"ChildObjects,omitempty"`
-	EnabledCertTemplates []ref  `json:"EnabledCertTemplates,omitempty"`
-	IsDC                 bool   `json:"IsDC,omitempty"`
+	AllowedToAct         []ref       `json:"AllowedToAct,omitempty"`
+	ChildObjects         []ref       `json:"ChildObjects,omitempty"`
+	EnabledCertTemplates []ref       `json:"EnabledCertTemplates,omitempty"`
+	LocalAdmins          *refResults `json:"LocalAdmins,omitempty"`
+	RemoteDesktopUsers   *refResults `json:"RemoteDesktopUsers,omitempty"`
+	PSRemoteUsers        *refResults `json:"PSRemoteUsers,omitempty"`
+	DcomUsers            *refResults `json:"DcomUsers,omitempty"`
+	Sessions             *sessResults `json:"Sessions,omitempty"`
+	IsDC                 bool        `json:"IsDC,omitempty"`
+}
+
+// SharpHound wraps these collections in {Collected, Results}.
+type refResults struct {
+	Collected bool  `json:"Collected"`
+	Results   []ref `json:"Results"`
+}
+
+type sessRef struct {
+	UserSID     string `json:"UserSID"`
+	ComputerSID string `json:"ComputerSID"`
+}
+
+type sessResults struct {
+	Collected bool      `json:"Collected"`
+	Results   []sessRef `json:"Results"`
 }
 
 type ref struct {
@@ -130,6 +151,7 @@ func (c *converter) convert(e *entry) *outObj {
 			props["operatingsystem"] = e.first("operatingSystem")
 			o.IsDC = isDC(e)
 			o.AllowedToAct = c.rbcdPrincipals(e) // msDS-AllowedToActOnBehalfOfOtherIdentity
+			c.attachRPC(e, o)
 		} else {
 			props["name"] = strings.ToUpper(sam) + "@" + c.domainFQDN
 		}
@@ -216,6 +238,44 @@ func (c *converter) rbcdPrincipals(e *entry) []ref {
 func atoiSafe(s string) int {
 	n, _ := strconv.Atoi(strings.TrimSpace(s))
 	return n
+}
+
+// attachRPC turns the SMB/RPC results on a computer entry into SharpHound-shaped
+// collections the GUI ingests.
+func (c *converter) attachRPC(e *entry, o *outObj) {
+	refs := func(sids []string) *refResults {
+		if sids == nil {
+			return nil
+		}
+		out := &refResults{Collected: true, Results: []ref{}}
+		for _, sid := range dedupe(sids) {
+			out.Results = append(out.Results, ref{ObjectIdentifier: sid, ObjectType: c.ptype(sid)})
+		}
+		return out
+	}
+	o.LocalAdmins = refs(e.admins)
+	o.RemoteDesktopUsers = refs(e.rdp)
+	o.DcomUsers = refs(e.dcom)
+	o.PSRemoteUsers = refs(e.psremote)
+	if e.sessions != nil {
+		s := &sessResults{Collected: true, Results: []sessRef{}}
+		for _, u := range dedupe(e.sessions) {
+			s.Results = append(s.Results, sessRef{UserSID: u, ComputerSID: e.sid})
+		}
+		o.Sessions = s
+	}
+}
+
+func dedupe(in []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, s := range in {
+		if !seen[s] {
+			seen[s] = true
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 // resolveRefs turns member DNs into typed references via the DN index.

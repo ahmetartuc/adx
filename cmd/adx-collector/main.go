@@ -25,6 +25,7 @@ func main() {
 	flag.StringVar(&cfg.Ccache, "ccache", "", "Kerberos ccache for pass-the-ticket / local (defaults to $KRB5CCNAME)")
 	flag.BoolVar(&cfg.Kerberos, "kerberos", false, "authenticate with Kerberos using the password")
 	flag.StringVar(&cfg.Krb5Conf, "krb5conf", "", "path to krb5.conf (generated from -dc/-d if omitted)")
+	flag.BoolVar(&cfg.NoRPC, "no-rpc", false, "skip the SMB/RPC session + local-admin pass (LDAP only)")
 	flag.BoolVar(&cfg.LDAPS, "ldaps", false, "use LDAPS (TLS, port 636)")
 	flag.BoolVar(&cfg.Insecure, "k", false, "skip TLS certificate verification (LDAPS)")
 	flag.IntVar(&cfg.Port, "port", 0, "LDAP port (default 389, or 636 with -ldaps)")

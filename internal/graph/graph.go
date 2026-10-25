@@ -185,9 +185,11 @@ var Traversable = map[string]bool{
 	"ReadGMSAPassword": true, "AddKeyCredentialLink": true, "AddAllowedToAct": true,
 	"AllowedToAct": true, "AllowedToDelegate": true, "WriteAccountRestrictions": true,
 	"WriteSPN": true, "AdminTo": true, "HasSession": true, "DCSync": true,
-	"CanRDP": true, "CanPSRemote": true, "ExecuteDCOM": true, "SQLAdmin": true,
-	"HasSIDHistory": true, "DumpSMSAPassword": true, "GPLink": true,
+	"SQLAdmin": true, "HasSIDHistory": true, "DumpSMSAPassword": true, "GPLink": true,
 	"CoerceToTGT": true, "ADCSESC1": true, "DomainAdmin": true,
+	// CanRDP / CanPSRemote / ExecuteDCOM are collected and shown on a node, but
+	// are lateral-movement primitives, not takeover: landing on a host as a
+	// non-admin does not control it, so they are not traversed for crown paths.
 }
 
 // Membership edges cost nothing: being in a group is already holding its rights.

@@ -65,6 +65,8 @@ Over a single LDAP(S) connection, leaving nothing on the target:
 - RBCD (`msDS-AllowedToActOnBehalfOfOtherIdentity`)
 - ADCS certificate templates and enterprise CAs (ESC1)
 - LAPS / gMSA password-read rights (schema GUIDs resolved at runtime)
+- Over SMB/RPC: local admins (`AdminTo`), `CanRDP`, `CanPSRemote`, `ExecuteDCOM`
+  and sessions (`HasSession`). Best-effort per host; skip it with `-no-rpc`.
 
 Authentication:
 
@@ -87,8 +89,8 @@ go build -o adx-collector ./cmd/adx-collector
 
 ## Roadmap
 
-1. Sessions & local admin via SMB/RPC (`HasSession`, `AdminTo`).
-2. More ADCS (ESC2–ESC8), constrained-delegation and GPO edges.
+1. More ADCS (ESC2–ESC8), constrained-delegation and GPO edges.
+2. Kerberos / SSPI auth for the SMB/RPC pass, and DNS resolution of member hosts.
 3. Local LLM analysis (Ollama) — the model drives the same queries as tools, so
    AD data never leaves the host.
 
