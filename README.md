@@ -102,3 +102,7 @@ command, rather than trusting it blindly.
 
 For authorized security testing and education only (engagements with written
 permission, labs, CTFs). You are responsible for how you use it.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
